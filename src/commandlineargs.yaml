@@ -1,0 +1,95 @@
+name: clbible
+version: "0.0.1"
+author: Kung Fu Bonanza
+about: "Displays a verse from the English Standard Version (ESV) of the Bible.\r\n\r\nScripture quotations are from the ESV® Bible (The Holy Bible, English Standard Version®), copyright © 2001 by Crossway, a publishing ministry of Good News Publishers. Used by permission. All rights reserved. You may not copy or download more than 500 consecutive verses of the ESV Bible or more than one half of any book of the ESV Bible."
+args:
+    - include-passage-references:
+        help: 'Hide passage references.'
+        long: include-passage-references
+        multiple: false
+    - include-verse-numbers:
+        help: 'Display verse numbers.'
+        long: include-verse-numbers
+        multiple: false
+    - include-first-verse-numbers:
+        help: 'Display first verse numbers.'
+        long: include-first-verse-numbers
+        multiple: false
+    - include-footnotes:
+        help: 'Display footnotes.'
+        long: include-footnotes
+        multiple: false
+    - include-footnotes-body:
+        help: 'Display footnotes body.'
+        long: include-footnotes-body
+        multiple: false
+    - include-headings:
+        help: 'Display headings.'
+        long: include-headings
+        multiple: false
+    - include-short-copyright:
+        help: 'Display "(ESV)" at the end of the text.'
+        long: include-short-copyright
+        multiple: false
+        conflicts_with: include-copyright
+    - include-copyright:
+        help: 'Display a copyright notice at the end of the text.'
+        long: include-copyright
+        multiple: false
+        conflicts_with: include-short-copyright
+    - include-passage-horizontal-lines:
+        help: 'Display horizontal lines above and below each passage.'
+        long: include-passage-horizontal-lines
+        multiple: false
+    - include-heading-horizontal-lines:
+        help: 'Display a horizontal line below each section heading.'
+        long: include-heading-horizontal-lines
+        multiple: false
+    - horizontal-line-length:
+        help: 'Number of characters in a horizontal line. [default_value: 55]'
+        long: horizontal-line-length
+        multiple: false
+        takes_value: true
+    - include-selahs:
+        help: 'Include "Selah" in select Psalms.'
+        long: include-selahs
+        multiple: false
+    - indent-using:
+        help: 'Indent with a space or a tab. [default_value: space]'
+        long: indent-using
+        multiple: false
+        takes_value: true
+        possible_values: [ "space", "tab" ]
+    - indent-paragraphs:
+        help: 'The number of indentation characters that start a paragraph. [default_value: 2]'
+        long: indent-paragraphs
+        multiple: false
+        takes_value: true
+    - indent-poetry:
+        help: 'Indent poetry.'
+        long: indent-poetry
+        multiple: false
+    - indent-poetry-lines:
+        help: 'The number of indentation characters used in poetry. [default_value: 4]'
+        long: indent-poetry-lines
+        multiple: false
+        takes_value: true
+    - indent-declares:
+        help: 'Number of characters to indent "Declares the LORD" in select prophecies. [default_value: 40]'
+        long: indent-declares
+        multiple: false
+        takes_value: true
+    - indent-psalm-doxology:
+        help: 'Number of characters to indent Psalm doxologies. [default_value: 30]'
+        long: indent-psalm-doxology
+        multiple: false
+        takes_value: true
+    - line-length:
+        help: 'Number of characters before a line is wrapped. Use 0 for unlimited line length. [default_value: 0]'
+        long: line-length
+        multiple: false
+        takes_value: true
+    - VERSE:
+        help: 'The verse to look up (e.g., "John 3:16").'
+        required: true
+        index: 1

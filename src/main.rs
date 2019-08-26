@@ -1,14 +1,17 @@
 extern crate config;
 
+#[macro_use]
+extern crate clap;
+
 use reqwest;
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
 /// Data class that models the fields in the "passage_meta" field
 /// contained in a JSON response from the ESV API.
 ///
 /// Note that the variable names are identical to the field names in
 /// the JSON.
+#[derive(Deserialize, Debug)]
 struct EsvApiResponsePassageMeta {
     canonical: String,
     chapter_start: Vec<u32>,
@@ -19,11 +22,11 @@ struct EsvApiResponsePassageMeta {
     next_chapter: Option<Vec<u32>>, // is optional because there is no next_chapter for Revelation 22:21
 }
 
-#[derive(Deserialize, Debug)]
 /// Data class that represents the JSON response from the ESV API.
 ///
 /// Note that the variable names are identical to the field names in
 /// the JSON.
+#[derive(Deserialize, Debug)]
 struct EsvApiResponse {
     query: String,
     canonical: String,
@@ -32,6 +35,81 @@ struct EsvApiResponse {
     passages: Vec<String>,
 }
 
+/// Uses the command line arguments to build and return a tuple containing
+/// all the API arguments and the verse(s) to be looked up.
+fn get_api_request_arguments() -> (String, String) {
+    // read the command line argument settings from the YAML file
+    let yaml = load_yaml!("commandlineargs.yaml");
+
+    // get all the matching arguments
+    let matches = clap::App::from_yaml(yaml).get_matches();
+
+    let mut options_string = String::new();
+
+    let boolean_args: [&str; 12] = [
+        ("include-passage-references"),
+        ("include-verse-numbers"),
+        ("include-first-verse-numbers"),
+        ("include-footnotes"),
+        ("include-footnotes-body"),
+        ("include-headings"),
+        ("include-short-copyright"),
+        ("include-copyright"),
+        ("include-passage-horizontal-lines"),
+        ("include-heading-horizontal-lines"),
+        ("include-selahs"),
+        ("indent-poetry"),
+    ];
+
+    for arg in &boolean_args {
+        // if the arg is present, then enable it
+        if matches.is_present(arg) {
+            options_string.push_str(&format!("&{}=true", arg).to_string());
+        // if the arg is not present, then disable it
+        } else {
+            options_string.push_str(&format!("&{}=false", arg).to_string());
+        }
+    }
+
+    // array of tuples, each tuple containing the name, minimum, and default
+    // values for the argument
+    let integer_args: [(&str, u32, u32); 6] = [
+        ("horizontal-line-length", 1, 55),
+        ("indent-paragraphs", 0, 2),
+        ("include-poetry-lines", 0, 4),
+        ("indent-declares", 0, 40),
+        ("indent-psalm-doxology", 0, 30),
+        ("line-length", 1, 0),
+    ];
+
+    for arg in &integer_args {
+        // if the arg is present, then use the integer value the user
+        // specified
+        if matches.is_present(arg.0) {
+            // TODO: handle out of range values
+            let value = value_t!(matches.value_of(arg.0), u32).unwrap_or(arg.2);
+            options_string.push_str(&format!("&{}={}", arg.0, value).to_string());
+        } else {
+        }
+        // if the arg is not present, then use the API default by not passing
+        // the argument as option
+    }
+
+    if matches.is_present("indent-using") {
+        options_string.push_str(&format!("&indent-using={}", matches.value_of("indent-using").unwrap_or("space")).to_string());
+    }
+
+    // Calling .unwrap() is safe here because "VERSE" is required (if "VERSE"
+    // wasn't required we could have used an 'if let' to conditionally get
+    // the value)
+    println!("Looking up this verse: {}", matches.value_of("VERSE").unwrap());
+
+    let verse_string = matches.value_of("VERSE").unwrap().to_string();
+
+    (verse_string, options_string)
+}
+
+/// Main function.
 fn main() -> Result<(), reqwest::Error> {
 
     // grab the API key from Settings.toml or the ESV_API_KEY
@@ -46,13 +124,16 @@ fn main() -> Result<(), reqwest::Error> {
 
     let client = reqwest::Client::new();
 
-    let mut req_string = String::from("https://api.esv.org/v3/passage/text/?q=");
+    let mut api_request_string = String::from("https://api.esv.org/v3/passage/text/?q=");
 
-    let ref_string = String::from("John+3:16");
+    let (verse_string, api_options) = get_api_request_arguments();
 
-    req_string.push_str(&ref_string);
+    api_request_string.push_str(&verse_string);
+    api_request_string.push_str(&api_options);
 
-    let mut server_reply = client.get(req_string.as_str())
+    dbg!(api_request_string.as_str());
+
+    let mut server_reply = client.get(api_request_string.as_str())
         .header(reqwest::header::AUTHORIZATION, esv_api_key)
         .send()?;
 
@@ -63,10 +144,10 @@ fn main() -> Result<(), reqwest::Error> {
 
             let api_response: EsvApiResponse = serde_json::from_str(&text).unwrap();
 
-            println!("{}", api_response.passages[0]);
+            dbg!(api_response.passages[0].as_str());
         }
         s => {
-            println!("Unable to retrieve {}. The server returned the following code: {:?}.", ref_string, s);
+            println!("Unable to retrieve {}. The server returned the following code: {:?}.", verse_string.to_string(), s);
             // TODO: return an error here
         }
     }
