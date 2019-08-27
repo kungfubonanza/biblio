@@ -144,7 +144,7 @@ fn main() -> Result<(), reqwest::Error> {
 
             let api_response: EsvApiResponse = serde_json::from_str(&text).unwrap();
 
-            dbg!(api_response.passages[0].as_str());
+            print!("{}", api_response.passages[0]);
         }
         s => {
             println!("Unable to retrieve {}. The server returned the following code: {:?}.", verse_string.to_string(), s);
